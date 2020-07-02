@@ -58,9 +58,12 @@ executeProgram program = do
             $ map head $ group $ sort $ concat $ map snd namedExprsDeps
 
     externalValues <- mapM readValueIO externalNames
+    let sortedNames = filter (flip notElem externalNames) $ sortNamesByDeps namedExprsDeps
+    let sortedNamedExprs = zip sortedNames $ map (fromJust . flip lookup namedExprs) sortedNames
+    let values = foldl (\vs (n, e) -> (n, evaluateExpr vs e):vs) externalValues sortedNamedExprs
+    let names = map fst namedExprs
 
-    -- TODO topology sort and evaluation
-    print externalValues
+    mapM_ showValueIO $ zip names $ map (fromJust . flip lookup values) names
 
 
 analyzeProgramNames :: Program -> [(String, Expr)]
@@ -74,6 +77,31 @@ analyzeExprDeps (BinaryExpr _ a b) = analyzeExprDeps a ++ analyzeExprDeps b
 analyzeExprDeps (IfThenElseExpr c a b) = analyzeExprDeps a ++ analyzeExprDeps b ++ analyzeExprDeps c
 analyzeExprDeps (ValueExpr _) = []
 analyzeExprDeps (NameExpr name) = [name]
+
+sortNamesByDeps :: [(String, [String])] -> [String]
+sortNamesByDeps nodesEdges = reverse $ fst $ sortNamesByDeps' [] $ map fst nodesEdges where
+    sortNamesByDeps' :: [String] -> [String] -> ([String], [String])
+    sortNamesByDeps' visited []           = ([], visited)
+    sortNamesByDeps' visited (node:nodes) = (nodes'' ++ nodes', visited'') where
+        (nodes', visited') = sortNamesByDeps'' visited node
+        (nodes'', visited'') = sortNamesByDeps' visited' nodes
+
+    sortNamesByDeps'' :: [String] -> String -> ([String], [String])
+    sortNamesByDeps'' visited node | node `elem` visited = ([], visited)
+                                | isNothing $ lookup node nodesEdges = ([node], node:visited)
+
+    sortNamesByDeps'' visited node = (node:sortedNodes, visited') where
+        (sortedNodes, visited') = sortNamesByDeps' (node:visited) $ fromJust $ lookup node nodesEdges
+
+
+showValueIO :: (String, Value) -> IO ()
+showValueIO (name, value) = putStrLn $ name ++ " = " ++ showValue value
+
+showValue :: Value -> String
+showValue (IntegerValue v) = show v
+showValue (DoubleValue v) = show v
+showValue (BoolValue v) = show v
+showValue (UndefinedValue msg) = "undefined (" ++ msg ++ ")"
 
 readValueIO :: String -> IO (String, Value)
 readValueIO name = ((,) name) <$> putPromptAndRead where

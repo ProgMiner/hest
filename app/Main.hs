@@ -21,12 +21,4 @@ expr2 = addExpr (ValueExpr $ DoubleValue 123) (ValueExpr $ IntegerValue 456)
 expr3 = addExpr (ValueExpr $ DoubleValue 123) (ValueExpr $ BoolValue True)
 
 main :: IO ()
-main = do
-    putStrLn $ show expr1
-    putStrLn $ show $ evaluateExpr expr1
-
-    putStrLn $ show expr2
-    putStrLn $ show $ evaluateExpr expr2
-
-    putStrLn $ show expr3
-    putStrLn $ show $ evaluateExpr expr3
+main = undefined
