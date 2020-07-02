@@ -3,6 +3,7 @@ module Lib where
 import Data.Maybe (isJust, isNothing, fromJust)
 import Control.Applicative ((<|>))
 import Data.List.Extra (notNull)
+import Data.List (sort, group)
 import Text.Read (readMaybe)
 
 
@@ -30,7 +31,7 @@ data Expr
     | NameExpr String
     deriving Show
 
-data Stmt = LetStmt String (Maybe Expr) deriving Show
+data Stmt = LetStmt String Expr deriving Show
 type Program = [Stmt]
 
 
@@ -51,25 +52,18 @@ evaluateExpr names (NameExpr name) = case lookup name names of
 executeProgram :: Program -> IO ()
 executeProgram program = do
     let namedExprs = analyzeProgramNames program
-    let externalNames = map fst $ filter (isNothing . snd) namedExprs
-    let internalExprs = map (fmap fromJust) $ filter (isJust . snd) namedExprs
-    let internalExprsDeps = map (fmap analyzeExprDeps) internalExprs
+    let namedExprsDeps = map (fmap analyzeExprDeps) namedExprs
 
-    let notDefinedNames = filter (isNothing . flip lookup namedExprs . snd)
-            $ concat $ map (\(k, v) -> map ((,) k) v) internalExprsDeps
-
-    if notNull notDefinedNames
-        then mapM_ (\(k, v) -> putStrLn $ "interpretation error: name " ++ show v
-                ++ " is not defined (in " ++ k ++ " definition)") notDefinedNames
-        else do
+    let externalNames = filter (isNothing . flip lookup namedExprs)
+            $ map head $ group $ sort $ concat $ map snd namedExprsDeps
 
     externalValues <- mapM readValueIO externalNames
 
     -- TODO topology sort and evaluation
-    print notDefinedNames
+    print externalValues
 
 
-analyzeProgramNames :: Program -> [(String, Maybe Expr)]
+analyzeProgramNames :: Program -> [(String, Expr)]
 analyzeProgramNames = foldr analyzeStmt [] where
     analyzeStmt (LetStmt name expr) result = (name, expr):result
 
