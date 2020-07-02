@@ -1,12 +1,9 @@
 module Main where
 
-import Lib
+import Value
+import Operator
+import Expr
 
-
-binaryOperatorBoilerplate :: String -> Value -> Value -> Value
-binaryOperatorBoilerplate _ a@(UndefinedValue _) _ = a
-binaryOperatorBoilerplate _ _ b@(UndefinedValue _) = b
-binaryOperatorBoilerplate op a b = binaryOperatorCannotBeApplied op a b
 
 addExpr = BinaryExpr $ BinaryOperator addExpr' "+" where
     addExpr' (IntegerValue a) (IntegerValue b) = IntegerValue $ a + b
