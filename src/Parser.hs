@@ -18,6 +18,7 @@ stmt = letStmt where
         char '='
         spaces
         expr' <- expr
+        spaces
         return $ LetStmt name' expr'
 
 expr =  try exprBinary
@@ -26,17 +27,14 @@ expr =  try exprBinary
     exprBinary = exprTerm
         `chainl1` try exprBinaryElvis
         `chainr1` try exprBinaryPower
-        `chainl1` (exprBinaryBitwiseAnd
-               <|> exprBinaryBitwiseOr
-               <|> exprBinaryBitwiseXor)
-        `chainl1` (exprBinaryMultiply
-               <|> exprBinaryDivision
+        `chainl1` (try exprBinaryMultiply
+               <|> try exprBinaryDivision
                <|> try exprBinaryIntegralDivision
-               <|> exprBinaryReminder)
+               <|> try exprBinaryReminder)
         `chainl1` (try exprBinaryBitwiseRol
                <|> try exprBinaryBitwiseRor)
-        `chainl1` (exprBinaryAdd
-               <|> exprBinarySubtract)
+        `chainl1` (try exprBinaryAdd
+               <|> try exprBinarySubtract)
         `chainl1` (try exprBinaryLower
                <|> try exprBinaryGreater
                <|> try exprBinaryEquals
@@ -44,7 +42,10 @@ expr =  try exprBinary
                <|> try exprBinaryLowerEquals
                <|> try exprBinaryGreaterEquals)
         `chainl1` (try exprBinaryAnd
-               <|> try exprBinaryOr) where
+               <|> try exprBinaryOr)
+        `chainl1` (try exprBinaryBitwiseAnd
+               <|> try exprBinaryBitwiseOr
+               <|> try exprBinaryBitwiseXor) where
 
         exprBinaryAdd              = char   '+'  <* spaces $> BinaryExpr addOperator
         exprBinarySubtract         = char   '-'  <* spaces $> BinaryExpr subtractOperator
@@ -105,21 +106,22 @@ expr =  try exprBinary
     exprValue = ValueExpr <$> value
     exprName = NameExpr <$> name
 
-unaryOperator =  unaryOperatorMinus
+unaryOperator = (unaryOperatorMinus
              <|> unaryOperatorBitwiseNot
              <|> unaryOperatorNot
-             <|> unaryOperatorElvis where
+             <|> unaryOperatorElvis)
+             <* spaces where
     
     unaryOperatorMinus      = char '-' $> unaryMinusOperator
     unaryOperatorBitwiseNot = char '~' $> bitwiseNotOperator
     unaryOperatorNot        = char '!' $> notOperator
     unaryOperatorElvis      = char '?' $> unaryElvisOperator
 
-value =  (try valueDouble
-      <|> try valueInteger
-      <|> try valueBool
-      <|> try valueUndefined)
-      <* spaces where
+value = (try valueDouble
+     <|> try valueInteger
+     <|> try valueBool
+     <|> try valueUndefined)
+     <* spaces where
 
     valueInteger = IntegerValue <$> read <$> many1 digit
     valueDouble = DoubleValue <$> read <$> (try doubleScientific <|> try doublePlain) where

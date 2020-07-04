@@ -1,0 +1,6 @@
+isCondBoolean = ?(cond || True)
+result = if isCondBoolean
+    then if cond
+        then 333
+        else 666
+    else undefined
