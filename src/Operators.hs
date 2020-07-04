@@ -1,6 +1,6 @@
 module Operators where
 
-import Data.Bits
+import Data.Bits ((.&.), (.|.), xor, shift, complement)
 
 import Value
 import Operator

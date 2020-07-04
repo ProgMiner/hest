@@ -1,21 +1,24 @@
-module Main where
+module Main (main) where
 
-import Value
-import Operator
-import Expr
+import System.Environment (getArgs, getProgName)
+import Text.Parsec (parse)
 
+import Stmt (executeProgram)
+import Parser (program)
 
-addExpr = BinaryExpr $ BinaryOperator addExpr' "+" where
-    addExpr' (IntegerValue a) (IntegerValue b) = IntegerValue $ a + b
-    addExpr' (DoubleValue a)  (IntegerValue b) = DoubleValue  $ a + fromIntegral b
-    addExpr' (IntegerValue a) (DoubleValue b)  = DoubleValue  $ fromIntegral a + b
-    addExpr' (DoubleValue a)  (DoubleValue b)  = DoubleValue  $ a + b
-    addExpr' a                b                = binaryOperatorBoilerplate "+" a b
-
-
-expr1 = addExpr (ValueExpr $ IntegerValue 123) (ValueExpr $ IntegerValue 456)
-expr2 = addExpr (ValueExpr $ DoubleValue 123) (ValueExpr $ IntegerValue 456)
-expr3 = addExpr (ValueExpr $ DoubleValue 123) (ValueExpr $ BoolValue True)
 
 main :: IO ()
-main = undefined
+main = do
+    args <- getArgs
+
+    case args of
+        (filename:_) -> runFile filename
+        _ -> ("Usage: " ++) <$> (++ " <filename>") <$> getProgName >>= putStrLn
+
+runFile :: String -> IO ()
+runFile filename = do
+    file <- readFile filename
+
+    case parse program filename file of
+        (Right p) -> executeProgram p
+        (Left err) -> print err

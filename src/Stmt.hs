@@ -1,8 +1,8 @@
 module Stmt where
 
-import Data.Maybe (isJust, isNothing, fromJust)
+import System.IO (hFlush, stdout)
+import Data.Maybe (isNothing, fromJust)
 import Control.Applicative ((<|>))
-import Data.List.Extra (notNull)
 import Data.List (sort, group)
 import Text.Read (readMaybe)
 
@@ -70,7 +70,7 @@ showValue (UndefinedValue msg) = "undefined (" ++ msg ++ ")"
 
 readValueIO :: String -> IO (String, Value)
 readValueIO name = ((,) name) <$> putPromptAndRead where
-    putPromptAndRead = readValue <$> (putStr (name ++ " = ") >> getLine) >>= putPromptAndRead'
+    putPromptAndRead = readValue <$> (putStr (name ++ " = ") >> hFlush stdout >> getLine) >>= putPromptAndRead'
     putPromptAndRead' (UndefinedValue msg) = putStrLn msg >> putPromptAndRead
     putPromptAndRead' v = return v
 
