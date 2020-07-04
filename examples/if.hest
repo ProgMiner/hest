@@ -4,3 +4,7 @@ result = if isCondBoolean
         then 333
         else 666
     else undefined
+
+result1 = if (isCondBoolean && cond) ?: False
+    then 333
+    else 666

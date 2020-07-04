@@ -21,9 +21,7 @@ stmt = letStmt where
         spaces
         return $ LetStmt name' expr'
 
-expr =  try exprBinary
-    <|> try exprTerm where
-
+expr = exprBinary where
     exprBinary = exprTerm
         `chainl1` try exprBinaryElvis
         `chainr1` try exprBinaryPower
@@ -75,13 +73,7 @@ expr =  try exprBinary
             <|> try exprValue
             <|> try exprName
 
-    exprBraces = do
-        char '('
-        spaces
-        expr' <- expr
-        spaces
-        char ')'
-        return $ BracesExpr expr'
+    exprBraces = BracesExpr <$> between (char '(' >> spaces) (char ')' >> spaces) expr
 
     exprUnary = do
         op <- unaryOperator
