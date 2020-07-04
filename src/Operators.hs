@@ -35,12 +35,12 @@ addOperator = BinaryOperator addOperator' "+" where
     addOperator' (DoubleValue  a) (DoubleValue  b) = DoubleValue  $              a +              b
     addOperator'               a                b  = binaryOperatorBoilerplate "+" a b
 
-minusOperator = BinaryOperator minusOperator' "-" where
-    minusOperator' (IntegerValue a) (IntegerValue b) = IntegerValue $              a -              b
-    minusOperator' (DoubleValue  a) (IntegerValue b) = DoubleValue  $              a - fromIntegral b
-    minusOperator' (IntegerValue a) (DoubleValue  b) = DoubleValue  $ fromIntegral a -              b
-    minusOperator' (DoubleValue  a) (DoubleValue  b) = DoubleValue  $              a -              b
-    minusOperator'               a                b  = binaryOperatorBoilerplate "-" a b
+subtractOperator = BinaryOperator subtractOperator' "-" where
+    subtractOperator' (IntegerValue a) (IntegerValue b) = IntegerValue $              a -              b
+    subtractOperator' (DoubleValue  a) (IntegerValue b) = DoubleValue  $              a - fromIntegral b
+    subtractOperator' (IntegerValue a) (DoubleValue  b) = DoubleValue  $ fromIntegral a -              b
+    subtractOperator' (DoubleValue  a) (DoubleValue  b) = DoubleValue  $              a -              b
+    subtractOperator'               a                b  = binaryOperatorBoilerplate "-" a b
 
 multiplyOperator = BinaryOperator multiplyOperator' "*" where
     multiplyOperator' (IntegerValue a) (IntegerValue b) = IntegerValue $              a *              b
