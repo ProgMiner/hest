@@ -27,7 +27,7 @@ True            { const $ ValueToken $ BoolValue True }
 False           { const $ ValueToken $ BoolValue False }
 undefined       { const $ ValueToken $ UndefinedValue "undefined" }
 $digit+         { ValueToken . IntegerValue . read }
-$digit*\.$digit+ { ValueToken . DoubleValue . read }
-$digit+[eE]$digit+ { ValueToken . DoubleValue . read }
-$digit*\.$digit+[eE]$digit+ { ValueToken . DoubleValue . read }
+$digit*\.$digit+ { ValueToken . DoubleValue . read . ('0' :) }
+$digit+[eE]$digit+ { ValueToken . DoubleValue . read . ('0' :) }
+$digit*\.$digit+[eE]$digit+ { ValueToken . DoubleValue . read . ('0' :) }
 [0-9a-zA-Z_']+  { NameToken }
