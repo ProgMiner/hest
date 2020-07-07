@@ -21,4 +21,4 @@ runFile filename = do
 
     case parse $ alexScanTokens file of
         (Right p) -> executeProgram p
-        (Left err) -> print err
+        (Left err) -> putStrLn err

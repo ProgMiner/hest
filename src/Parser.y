@@ -49,15 +49,19 @@ import Operators
     '<='    { OpToken "<=" }
     '>='    { OpToken ">=" }
 
-%left '?:'
-%right '**'
-%left '*' '/' '//' '%'
+%left '&&' '||'
+%left '==' '!='
+%nonassoc '<' '<=' '>=' '>'
+%left '+' '-'
 %left '<<' '>>'
 %left '&' '|' '^'
-%left '+' '-'
-%left '<' '<=' '>=' '>'
-%left '==' '!='
-%left '&&' '||'
+%left '*' '/' '//' '%'
+%right '**'
+%left '?:'
+%nonassoc NOT
+%left NEG
+%nonassoc BNOT
+%nonassoc UELV
 
 %%
 
@@ -73,17 +77,17 @@ stmt
 
 expr
     : '(' expr ')'  { BracesExpr $2 }
-    | unaryOperator expr { UnaryExpr $1 $2 }
+    | binaryExpr    { $1 }
+    | unaryExpr     { $1 }
     | if expr then expr else expr { IfThenElseExpr $2 $4 $6 }
     | value         { ValueExpr $1 }
     | name          { NameExpr $1 }
-    | binaryExpr    { $1 }
 
-unaryOperator
-    : '-'           { unaryMinusOperator }
-    | '~'           { bitwiseNotOperator }
-    | '!'           { notOperator }
-    | '?'           { unaryElvisOperator }
+unaryExpr
+    : '?' expr %prec UELV   { UnaryExpr unaryElvisOperator $2 }
+    | '~' expr %prec BNOT   { UnaryExpr bitwiseNotOperator $2 }
+    | '-' expr %prec NEG    { UnaryExpr unaryMinusOperator $2 }
+    | '!' expr %prec NOT    { UnaryExpr notOperator $2 }
 
 binaryExpr
     : expr '?:' expr    { BinaryExpr elvisOperator $1 $3 }
