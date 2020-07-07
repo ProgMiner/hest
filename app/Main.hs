@@ -1,10 +1,10 @@
 module Main (main) where
 
 import System.Environment (getArgs, getProgName)
-import Text.Parsec (parse)
 
 import Stmt (executeProgram)
-import Parser (program)
+import Lexer (alexScanTokens)
+import Parser (parse)
 
 
 main :: IO ()
@@ -19,6 +19,6 @@ runFile :: String -> IO ()
 runFile filename = do
     file <- readFile filename
 
-    case parse program filename file of
+    case parse $ alexScanTokens file of
         (Right p) -> executeProgram p
         (Left err) -> print err

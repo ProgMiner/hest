@@ -1,9 +1,11 @@
 module Token where
 
+import Value
+
 
 data Token
     = NameToken String
-    | ValueToken String
+    | ValueToken Value
     | LetEqToken
     | IfToken
     | ThenToken
