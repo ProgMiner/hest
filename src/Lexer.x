@@ -1,13 +1,15 @@
 -- # vim:syntax=lex
 
 {
-module Lexer (alexScanTokens) where
+module Lexer (lex) where
+
+import Prelude hiding (lex)
 
 import Value
 import Token
 }
 
-%wrapper "posn"
+%wrapper "monad"
 
 $digit = [0-9]
 $op = [\~\!\@\#\$\%\^\&\*\=\+\|\:\<\>\/\?\-]
@@ -16,18 +18,44 @@ tokens :-
 
 $white+         ;
 "--".*          ;
-if              { const $ const IfToken }
-then            { const $ const ThenToken }
-else            { const $ const ElseToken }
-=               { const $ const LetEqToken }
-\(              { const $ const LBraceToken }
-\)              { const $ const RBraceToken }
-$op+            { const $ OpToken }
-True            { const $ const $ ValueToken $ BoolValue True }
-False           { const $ const $ ValueToken $ BoolValue False }
-undefined       { \(AlexPn _ l c) -> const $ ValueToken $ UndefinedValue $ "undefined at " ++ show l ++ ":" ++ show c }
-$digit+         { const $ ValueToken . IntegerValue . read }
-$digit*\.$digit+ { const $ ValueToken . DoubleValue . read . ('0' :) }
-$digit+[eE]$digit+ { const $ ValueToken . DoubleValue . read . ('0' :) }
-$digit*\.$digit+[eE]$digit+ { const $ ValueToken . DoubleValue . read . ('0' :) }
-[0-9a-zA-Z_']+  { const $ NameToken }
+if              { constToken IfToken }
+then            { constToken ThenToken }
+else            { constToken ElseToken }
+=               { constToken LetEqToken }
+\(              { constToken LBraceToken }
+\)              { constToken RBraceToken }
+$op+            { strToken OpToken }
+True            { constToken $ ValueToken $ BoolValue True }
+False           { constToken $ ValueToken $ BoolValue False }
+undefined       { undefinedToken }
+$digit+         { strToken $ ValueToken . IntegerValue . read }
+$digit*\.$digit+ { strToken $ ValueToken . DoubleValue . read . ('0' :) }
+$digit+[eE]$digit+ { strToken $ ValueToken . DoubleValue . read . ('0' :) }
+$digit*\.$digit+[eE]$digit+ { strToken $ ValueToken . DoubleValue . read . ('0' :) }
+[0-9a-zA-Z_']+  { strToken $ NameToken }
+
+{
+data TokenWrapper = TW Token | WEOF
+
+alexEOF = return WEOF
+
+constToken :: Token -> AlexAction TokenWrapper
+constToken t _ _ = return $ TW t
+
+strToken :: (String -> Token) -> AlexAction TokenWrapper
+strToken f (_, _, _, str) len = return $ TW $ f $ take len str
+
+posStrToken :: (AlexPosn -> String -> Token) -> AlexAction TokenWrapper
+posStrToken f (pos, _, _, str) len = return $ TW $ f pos $ take len str
+
+undefinedToken :: AlexAction TokenWrapper
+undefinedToken = posStrToken ut' where
+    ut' (AlexPn _ l c) _ = ValueToken $ UndefinedValue $ "undefined at " ++ show l ++ ":" ++ show c
+
+
+lex :: String -> Either String [Token]
+lex str = reverse <$> runAlex str (lex' []) where
+    lex' ts = alexMonadScan >>= lex'' where
+        lex'' (TW t) = lex' (t:ts)
+        lex'' WEOF   = return ts
+}

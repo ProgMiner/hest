@@ -1,10 +1,11 @@
 module Main (main) where
 
+import Prelude hiding (lex)
 import System.Environment (getArgs, getProgName)
 
 import Stmt (executeProgram)
-import Lexer (alexScanTokens)
 import Parser (parse)
+import Lexer (lex)
 
 
 main :: IO ()
@@ -19,6 +20,6 @@ runFile :: String -> IO ()
 runFile filename = do
     file <- readFile filename
 
-    case parse $ alexScanTokens file of
+    case lex file >>= parse of
         (Right p) -> executeProgram p
         (Left err) -> putStrLn err
